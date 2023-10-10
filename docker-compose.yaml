@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  db: 
+    image: postgres
+    restart: always
+    environment: 
+      POSTGRES_PASSWORD: example
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d
