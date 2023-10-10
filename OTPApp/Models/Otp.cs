@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 #nullable disable
 
-namespace ef_dotnet
+namespace OTPApp.Models
 {
     public partial class Otp
     {

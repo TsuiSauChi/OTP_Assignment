@@ -1,18 +1,19 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using OTPApp.Models;
 
 #nullable disable
 
-namespace ef_dotnet
+namespace OTPApp.Data
 {
-    public partial class postgresContext : DbContext
+    public partial class DataContext : DbContext
     {
-        public postgresContext()
+        public DataContext()
         {
         }
 
-        public postgresContext(DbContextOptions<postgresContext> options)
+        public DataContext(DbContextOptions<DataContext> options)
             : base(options)
         {
         }
