@@ -8,3 +8,23 @@ services:
       POSTGRES_PASSWORD: example
     volumes:
       - ./database:/docker-entrypoint-initdb.d
+    networks:
+      my_network:
+        ipv4_address: 172.20.0.2
+  dotnet:
+    build:
+      context: ./OTPApp             
+      dockerfile: Dockerfile       
+    ports:
+      - "5001:5001"
+    networks: 
+      my_network:
+        ipv4_address: 172.20.0.3
+
+networks:
+  my_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16

@@ -25,7 +25,7 @@ namespace OTPApp.Controllers
         STATUS_EMAIL_INVALID = 400,
     }
 
-    [Route("api/[controller]")]
+    [Route("api/")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -92,7 +92,7 @@ namespace OTPApp.Controllers
             TimeSpan? timeDifferenceNullable = DateTime.Now - modifiedUser.Otpdate;
             TimeSpan timeDifference = timeDifferenceNullable ?? TimeSpan.Zero;
             TimeSpan oneMinute = TimeSpan.FromMinutes(1);
-            
+
             if (timeDifference > oneMinute){
                 return ResponseOTPStatusCode.STATUS_OTP_TIMEOUT;
             }   
