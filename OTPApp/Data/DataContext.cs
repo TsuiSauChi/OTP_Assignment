@@ -49,6 +49,10 @@ namespace OTPApp.Data
                 entity.Property(e => e.Name).HasColumnName("name");
 
                 entity.Property(e => e.Otp).HasColumnName("otp");
+
+                entity.Property(e => e.Otpdate)
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("otpdate");
             });
 
             OnModelCreatingPartial(modelBuilder);

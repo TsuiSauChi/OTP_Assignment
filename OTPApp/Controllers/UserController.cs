@@ -15,6 +15,7 @@ namespace OTPApp.Controllers
         STATUS_OTP_OK = 200,
         STATUS_OTP_FAIL = 500,
         STATUS_OTP_TIMEOUT = 408,
+        STATUS_OTP_EXPIRED = 409,
         STATUS_OTP_ERROR = 404,
     }
     enum ResponseEmailStatusCode
@@ -38,15 +39,16 @@ namespace OTPApp.Controllers
         /// <summary>
         /// Retrieves Enrollment By Id
         /// </summary>
-        [HttpGet("user/{id}")]
-        public async Task<ActionResult<User>> GetAllUs(int id)
+        [HttpGet("users")]
+        public async Task<ActionResult<User>> GetAllUs()
         {
             var query = from user in _context.Users
-                where user.Id == id
                 select new User{
                     Id = user.Id,
                     Name = user.Name,
                     Email = user.Email,
+                    Otp = user.Otp,
+                    Otpdate = user.Otpdate
                 };
 
             return await query.FirstAsync(); 
@@ -54,6 +56,7 @@ namespace OTPApp.Controllers
 
         [HttpPost("user/email")]
         public async Task<ActionResult<Object>> SendEmail(int id, string user_email){
+            DateTime now = DateTime.Now;
             bool isValidEMail = EmailUtils.checkEmailFormat(user_email);
 
             if (isValidEMail) {
@@ -64,6 +67,7 @@ namespace OTPApp.Controllers
                 var modifiedUser = await _context.Users.FindAsync(id);
                 modifiedUser.Otp = OTP;
                 modifiedUser.Attempt = 0;
+                modifiedUser.Otpdate = now;
 
                 _context.Update<User>(modifiedUser);
 
@@ -85,7 +89,18 @@ namespace OTPApp.Controllers
             var modifiedUser = await _context.Users.FindAsync(id);
             var isValid = EmailUtils.CompareOTP(modifiedUser.Otp, otp);
 
+            TimeSpan? timeDifferenceNullable = DateTime.Now - modifiedUser.Otpdate;
+            TimeSpan timeDifference = timeDifferenceNullable ?? TimeSpan.Zero;
+            TimeSpan oneMinute = TimeSpan.FromMinutes(1);
+            
+            if (timeDifference > oneMinute){
+                return ResponseOTPStatusCode.STATUS_OTP_TIMEOUT;
+            }   
+
             if(isValid){
+                if (modifiedUser.Attempt > 10){
+                    return ResponseOTPStatusCode.STATUS_OTP_EXPIRED;
+                }
                 return ResponseOTPStatusCode.STATUS_OTP_OK;
             } else {
                 modifiedUser.Attempt += 1;
