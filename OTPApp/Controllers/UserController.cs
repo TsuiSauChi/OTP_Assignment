@@ -52,25 +52,27 @@ namespace OTPApp.Controllers
             return await query.FirstAsync(); 
         }
 
+        // Generate a new 6 digit random OTP code and return OTP to the API Endpoint
+        // Only emails from the ".dso.org.sg" domain is allowed to receive an OTP code
         [HttpPost("user/email")]
         public async Task<ActionResult<Object>> SendEmail(int id, string user_email){
             DateTime now = DateTime.Now;
             bool isValidEMail = EmailUtils.checkEmailFormat(user_email);
 
             if (isValidEMail) {
-                // assume OTP is randomly generated via a function then stored in DB or temp DB etc
                 string OTP = EmailUtils.GenerateOTP();
 
                 var modifiedUser = await _context.Users.FindAsync(id);
                 modifiedUser.Otp = OTP;
                 modifiedUser.Otpdate = now;
                 modifiedUser.Attempt = 0;
-                
+
                 _context.Update<User>(modifiedUser);
 
                 try
                 {
                     await _context.SaveChangesAsync();
+                    // Return OTP String for easy reference
                     return OTP;
                 } catch (DbUpdateConcurrencyException)
                 {
@@ -80,6 +82,8 @@ namespace OTPApp.Controllers
             return ResponseEmailStatusCode.STATUS_EMAIL_INVALID;
         }
 
+        // Read the input OTP and match with the user OTP. Allows user 10 tries to eneter the valid OTP
+        // The OTP is only valid for 5 second 
         [HttpGet("user/checkotp")]
         public async Task<ActionResult<Object>> CheckOTP(int id, string otp){
             
@@ -88,6 +92,7 @@ namespace OTPApp.Controllers
 
             TimeSpan? timeDifferenceNullable = DateTime.Now - modifiedUser.Otpdate;
             TimeSpan timeDifference = timeDifferenceNullable ?? TimeSpan.Zero;
+            // OTP valid for 5 second for simulation purpose
             TimeSpan oneMinute = TimeSpan.FromSeconds(5);
 
             if (timeDifference > oneMinute){
@@ -95,6 +100,7 @@ namespace OTPApp.Controllers
             }   
 
             if(isValid){
+                // Allow user 10 attempts
                 if (modifiedUser.Attempt > 10){
                     return ResponseOTPStatusCode.STATUS_OTP_EXPIRED;
                 }
