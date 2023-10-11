@@ -36,9 +36,6 @@ namespace OTPApp.Controllers
             _context = context;
         }
 
-        /// <summary>
-        /// Retrieves Enrollment By Id
-        /// </summary>
         [HttpGet("users")]
         public async Task<ActionResult<User>> GetAllUs()
         {
@@ -47,6 +44,7 @@ namespace OTPApp.Controllers
                     Id = user.Id,
                     Name = user.Name,
                     Email = user.Email,
+                    Attempt = user.Attempt,
                     Otp = user.Otp,
                     Otpdate = user.Otpdate
                 };
@@ -62,19 +60,18 @@ namespace OTPApp.Controllers
             if (isValidEMail) {
                 // assume OTP is randomly generated via a function then stored in DB or temp DB etc
                 string OTP = EmailUtils.GenerateOTP();
-                string email_body = "You OTP Code is " + OTP + ". The code is valid for 1 minute";
 
                 var modifiedUser = await _context.Users.FindAsync(id);
                 modifiedUser.Otp = OTP;
-                modifiedUser.Attempt = 0;
                 modifiedUser.Otpdate = now;
-
+                modifiedUser.Attempt = 0;
+                
                 _context.Update<User>(modifiedUser);
 
                 try
                 {
                     await _context.SaveChangesAsync();
-                    return email_body;
+                    return OTP;
                 } catch (DbUpdateConcurrencyException)
                 {
                     return ResponseEmailStatusCode.STATUS_EMAIL_FAIL;
@@ -91,7 +88,7 @@ namespace OTPApp.Controllers
 
             TimeSpan? timeDifferenceNullable = DateTime.Now - modifiedUser.Otpdate;
             TimeSpan timeDifference = timeDifferenceNullable ?? TimeSpan.Zero;
-            TimeSpan oneMinute = TimeSpan.FromMinutes(1);
+            TimeSpan oneMinute = TimeSpan.FromSeconds(5);
 
             if (timeDifference > oneMinute){
                 return ResponseOTPStatusCode.STATUS_OTP_TIMEOUT;
